@@ -19,8 +19,11 @@ export const protect = async (req, res, next) => {
                 return res.status(401).json({ message: "User not found!" });
             }
 
+            console.log("✅ Authenticated User:", req.user); // Debugging
+
             next();
         } catch (error) {
+            console.error("❌ JWT Verification Error:", error.message); // Debugging
             return res.status(401).json({ message: "Not authorized, invalid token!" });
         }
     } else {
@@ -30,6 +33,8 @@ export const protect = async (req, res, next) => {
 
 // ✅ Middleware: Restrict Access to Admin Only
 export const adminOnly = (req, res, next) => {
+    console.log("🔹 User Role:", req.user.role); // Debugging
+
     if (req.user && req.user.role === "admin") {
         next(); // ✅ User is admin, proceed
     } else {

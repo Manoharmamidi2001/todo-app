@@ -1,7 +1,7 @@
 import express from "express";
 import { postUser, loginUser } from "../controllers/user.controller.js";
 import { protect, adminOnly } from "../middleware/auth.middleware.js";
-import User from "../models/auth.user.model.js"; // ✅ Import User Model
+import User from "../models/auth.user.model.js";
 
 const router = express.Router();
 
@@ -13,10 +13,10 @@ router.get("/profile", protect, (req, res) => {
     res.json({ message: "Protected Profile Data", user: req.user });
 });
 
-// ✅ Admin-Only Route (Get All Users)
+// ✅ Admin-Only Route (Example: Get All Users)
 router.get("/admin/users", protect, adminOnly, async (req, res) => {
     try {
-        const users = await User.find().select("-password"); // ✅ Fetch all users
+        const users = await User.find().select("-password");
         res.json(users);
     } catch (error) {
         res.status(500).json({ message: error.message });
