@@ -80,3 +80,75 @@ export const loginUser = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+
+// ✅ Update User (Admin or Self-Update)
+export const updateUser = async (req, res) => {
+    const { fullname, email, password, role } = req.body;
+    const userId = req.params.id;
+
+    try {
+        // Find user
+        let user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "User not found!" });
+
+        // Only admin can update any user; users can only update themselves
+        if (req.user.role !== "admin" && req.user.id !== userId) {
+            return res.status(403).json({ message: "Access denied!" });
+        }
+
+        // Update user details
+        user.fullname = fullname || user.fullname;
+        user.email = email || user.email;
+
+        // Hash new password if provided
+        if (password) {
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(password, salt);
+        }
+
+        // Admin can update role, users cannot change their role
+        if (req.user.role === "admin" && role) {
+            user.role = role;
+        }
+
+        await user.save();
+
+        res.status(200).json({ message: "User updated successfully!", user });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// ✅ Delete User (Admin Only)
+export const deleteUser = async (req, res) => {
+    const userId = req.params.id;
+
+    try {
+        // Find user
+        let user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "User not found!" });
+
+        // Only admin can delete users
+        if (req.user.role !== "admin") {
+            return res.status(403).json({ message: "Access denied!" });
+        }
+
+        await user.deleteOne();
+
+        res.status(200).json({ message: "User deleted successfully!" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
+export const forAdmin = async (req, res) => {
+    try {
+        // Fetch users excluding those with role "admin"
+        const users = await User.find({ role: { $ne: "admin" } }).select("-password");
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};

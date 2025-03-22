@@ -1,12 +1,18 @@
 import express from "express";
-import { postUser, loginUser } from "../controllers/user.controller.js";
+import { postUser, loginUser, updateUser, deleteUser, forAdmin } from "../controllers/user.controller.js";
 import { protect, adminOnly } from "../middleware/auth.middleware.js";
-import User from "../models/auth.user.model.js";
 
 const router = express.Router();
 
 router.post("/register", postUser); // Register User
 router.post("/login", loginUser);   // Login User
+
+
+// ✅ Update User (Admin or Self)
+router.put("/:id", protect, updateUser);
+
+// ✅ Delete User (Admin Only)
+router.delete("/:id", protect, adminOnly, deleteUser);
 
 // ✅ Protected Route (Requires Auth)
 router.get("/profile", protect, (req, res) => {
@@ -14,13 +20,6 @@ router.get("/profile", protect, (req, res) => {
 });
 
 // ✅ Admin-Only Route (Example: Get All Users)
-router.get("/admin/users", protect, adminOnly, async (req, res) => {
-    try {
-        const users = await User.find().select("-password");
-        res.json(users);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
+router.get("/admin/users", protect, adminOnly, forAdmin);
 
 export default router;
